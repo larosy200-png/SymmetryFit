@@ -38,54 +38,64 @@ function Entrenos() {
 }
 
 function Progreso() {
-  const data = [
-    { week: "Semana 1", hipThrust: 60 },
-    { week: "Semana 2", hipThrust: 65 },
-    { week: "Semana 3", hipThrust: 70 },
-    { week: "Semana 4", hipThrust: 75 }
+  // 🔥 PRs (luego los haremos dinámicos)
+  const prs = {
+    hipThrust: 75,
+    prensa: 120,
+    smithSquat: 60
+  };
+
+  // 📈 evolución simulada (luego será real desde tus entrenos)
+  const evolution = [
+    { week: "Semana 1", value: 60 },
+    { week: "Semana 2", value: 65 },
+    { week: "Semana 3", value: 70 },
+    { week: "Semana 4", value: 75 }
   ];
 
   return (
     <div>
       <h2 className="title">📊 Progreso</h2>
 
-      {/* PRs */}
+      {/* 🏆 PRs */}
       <div className="card">
-        <h3>🏆 PRs principales</h3>
-        <p>Hip Thrust: 75 kg</p>
-        <p>Prensa: 120 kg</p>
-        <p>Smith squat: 60 kg</p>
+        <h3>🏆 PRs (máximos)</h3>
+
+        <p>🍑 Hip Thrust: <b>{prs.hipThrust} kg</b></p>
+        <p>🦵 Prensa: <b>{prs.prensa} kg</b></p>
+        <p>🏋️ Smith Squat: <b>{prs.smithSquat} kg</b></p>
       </div>
 
-      {/* EVOLUCIÓN */}
+      {/* 📈 EVOLUCIÓN */}
       <div className="card">
-        <h3>📈 Evolución Hip Thrust</h3>
+        <h3>📈 Evolución (Hip Thrust)</h3>
 
-        <div style={{ marginTop: 10 }}>
-          {data.map((item, i) => (
-            <div key={i} style={{ marginBottom: 8 }}>
+        {evolution.map((item, i) => (
+          <div key={i} style={{ marginBottom: 12 }}>
+            <div style={{ display: "flex", justifyContent: "space-between" }}>
               <strong>{item.week}</strong>
+              <span>{item.value} kg</span>
+            </div>
+
+            <div
+              style={{
+                height: 8,
+                background: "#2a2a2a",
+                borderRadius: 6,
+                marginTop: 5
+              }}
+            >
               <div
                 style={{
-                  background: "#2a2a2a",
-                  borderRadius: 6,
-                  height: 10,
-                  marginTop: 4
+                  height: 8,
+                  width: `${(item.value / 100) * 100}%`,
+                  background: "#ff4d6d",
+                  borderRadius: 6
                 }}
-              >
-                <div
-                  style={{
-                    width: `${item.hipThrust * 1.2}px`,
-                    height: 10,
-                    background: "#ff4d6d",
-                    borderRadius: 6
-                  }}
-                />
-              </div>
-              <small>{item.hipThrust} kg</small>
+              />
             </div>
-          ))}
-        </div>
+          </div>
+        ))}
       </div>
     </div>
   );
