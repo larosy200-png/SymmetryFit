@@ -38,10 +38,55 @@ function Entrenos() {
 }
 
 function Progreso() {
+  const data = [
+    { week: "Semana 1", hipThrust: 60 },
+    { week: "Semana 2", hipThrust: 65 },
+    { week: "Semana 3", hipThrust: 70 },
+    { week: "Semana 4", hipThrust: 75 }
+  ];
+
   return (
     <div>
       <h2 className="title">📊 Progreso</h2>
-      <p>Próximamente: gráficos, PRs y evolución 🍑</p>
+
+      {/* PRs */}
+      <div className="card">
+        <h3>🏆 PRs principales</h3>
+        <p>Hip Thrust: 75 kg</p>
+        <p>Prensa: 120 kg</p>
+        <p>Smith squat: 60 kg</p>
+      </div>
+
+      {/* EVOLUCIÓN */}
+      <div className="card">
+        <h3>📈 Evolución Hip Thrust</h3>
+
+        <div style={{ marginTop: 10 }}>
+          {data.map((item, i) => (
+            <div key={i} style={{ marginBottom: 8 }}>
+              <strong>{item.week}</strong>
+              <div
+                style={{
+                  background: "#2a2a2a",
+                  borderRadius: 6,
+                  height: 10,
+                  marginTop: 4
+                }}
+              >
+                <div
+                  style={{
+                    width: `${item.hipThrust * 1.2}px`,
+                    height: 10,
+                    background: "#ff4d6d",
+                    borderRadius: 6
+                  }}
+                />
+              </div>
+              <small>{item.hipThrust} kg</small>
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }
