@@ -99,11 +99,27 @@ function Entrenos() {
           <h4>{ex}</h4>
 
           <input
-            placeholder="Peso"
-            type="number"
-            onChange={(e) => handleChange(ex, "peso", e.target.value)}
-          />
+  placeholder="Peso"
+  type="number"
+  onChange={(e) => handleChange(ex, "peso", e.target.value)}
+/>
 
+{/* 🍑 GLÚTEO IZQ / DER SOLO PARA EJERCICIOS DE GLÚTEO */}
+{ex.toLowerCase().includes("glúteo") && (
+  <>
+    <input
+      placeholder="Izquierdo"
+      type="number"
+      onChange={(e) => handleChange(ex, "izq", e.target.value)}
+    />
+
+    <input
+      placeholder="Derecho"
+      type="number"
+      onChange={(e) => handleChange(ex, "der", e.target.value)}
+    />
+  </>
+)}
           <input
             placeholder="Reps"
             onChange={(e) => handleChange(ex, "reps", e.target.value)}
@@ -122,6 +138,9 @@ function Entrenos() {
 /* =========================
    PROGRESO (REAL)
 ========================= */
+let totalLeft = 0;
+let totalRight = 0;
+let count = 0;
 function Progreso() {
   const prs = calculatePRs();
   const data = getWorkoutData();
@@ -133,21 +152,24 @@ function Progreso() {
 
     Object.values(data).forEach((day) => {
       Object.values(day || {}).forEach((ex) => {
-        if (ex.izq && ex.der) {
-          left += Number(ex.izq);
-          right += Number(ex.der);
-          count++;
-        }
+       const left = Number(ex.izq || 0);
+const right = Number(ex.der || 0);
+
+if (left > 0 && right > 0) {
+  totalLeft += left;
+  totalRight += right;
+  count++;
+}
       });
     });
 
     if (count === 0) return null;
 
     return {
-      left: left / count,
-      right: right / count,
-      diff: Math.abs(left - right) / count
-    };
+  left: totalLeft / count,
+  right: totalRight / count,
+  diff: Math.abs(totalLeft - totalRight) / count
+};
   };
 
   const imbalance = getGluteImbalance();
@@ -179,39 +201,110 @@ function Progreso() {
    AJUSTES
 ========================= */
 function Ajustes() {
-  const [profile, setProfile] = useState({
-    weight: "",
-    height: "",
-    goal: "hipertrofia",
-    level: "principiante"
+  const [profile, setProfile] = useState(() => {
+    const saved = localStorage.getItem("symmetryfit-profile");
+
+    return saved
+      ? JSON.parse(saved)
+      : {
+          weight: "",
+          height: "",
+          goal: "hipertrofia",
+          level: "principiante"
+        };
   });
 
-  const saveProfile = () => {
+  // 💾 auto-guardar cada cambio
+  useEffect(() => {
     localStorage.setItem("symmetryfit-profile", JSON.stringify(profile));
-    alert("✔ Perfil guardado");
-  };
+  }, [profile]);
 
-  const clearAll = () => {
-    localStorage.clear();
-    alert("🗑 Todo eliminado");
-  };
+  return (
+    <div>
+      <h2 className="title">⚙️ Ajustes</h2>
 
-  const exportData = () => {
-    const data = {
-      profile: JSON.parse(localStorage.getItem("symmetryfit-profile")),
-      workouts: JSON.parse(localStorage.getItem("symmetryfit-data"))
-    };
+      {/* 👤 PERFIL */}
+      <div className="card">
+        <h3>👤 Perfil</h3>
 
-    const blob = new Blob([JSON.stringify(data, null, 2)], {
-      type: "application/json"
-    });
+        <input
+          placeholder="Peso (kg)"
+          value={profile.weight}
+          onChange={(e) =>
+            setProfile({ ...profile, weight: e.target.value })
+          }
+        />
 
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "symmetryfit-data.json";
-    a.click();
-  };
+        <input
+          placeholder="Altura (cm)"
+          value={profile.height}
+          onChange={(e) =>
+            setProfile({ ...profile, height: e.target.value })
+          }
+        />
+
+        <select
+          value={profile.goal}
+          onChange={(e) =>
+            setProfile({ ...profile, goal: e.target.value })
+          }
+        >
+          <option value="hipertrofia">Hipertrofia</option>
+          <option value="fuerza">Fuerza</option>
+          <option value="definicion">Definición</option>
+        </select>
+
+        <select
+          value={profile.level}
+          onChange={(e) =>
+            setProfile({ ...profile, level: e.target.value })
+          }
+        >
+          <option value="principiante">Principiante</option>
+          <option value="intermedio">Intermedio</option>
+          <option value="avanzado">Avanzado</option>
+        </select>
+      </div>
+
+      {/* 🧰 HERRAMIENTAS */}
+      <div className="card">
+        <h3>🧰 Herramientas</h3>
+
+        <button
+          onClick={() => {
+            localStorage.clear();
+            alert("🗑 Todo eliminado");
+          }}
+          className="dayBtn"
+        >
+          🗑 Borrar todo
+        </button>
+
+        <button
+          onClick={() => {
+            const data = {
+              profile: JSON.parse(localStorage.getItem("symmetryfit-profile")),
+              workouts: JSON.parse(localStorage.getItem("symmetryfit-data"))
+            };
+
+            const blob = new Blob([JSON.stringify(data, null, 2)], {
+              type: "application/json"
+            });
+
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = "symmetryfit-data.json";
+            a.click();
+          }}
+          className="dayBtn"
+        >
+          📤 Exportar datos
+        </button>
+      </div>
+    </div>
+  );
+}
 
   return (
     <div>
