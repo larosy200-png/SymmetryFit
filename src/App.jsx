@@ -277,3 +277,36 @@ function Ajustes() {
     </div>
   );
 }
+export default function App() {
+  const [tab, setTab] = useState("entrenos");
+
+  let screen;
+
+  if (tab === "entrenos") screen = <Entrenos />;
+  if (tab === "progreso") screen = <Progreso />;
+  if (tab === "ajustes") screen = <Ajustes />;
+
+  return (
+    <div>
+      {screen}
+
+      {/* NAV BAR */}
+      <div
+        style={{
+          position: "fixed",
+          bottom: 0,
+          left: 0,
+          right: 0,
+          display: "flex",
+          justifyContent: "space-around",
+          background: "#111",
+          padding: 10
+        }}
+      >
+        <button onClick={() => setTab("entrenos")}>🏋️</button>
+        <button onClick={() => setTab("progreso")}>📊</button>
+        <button onClick={() => setTab("ajustes")}>⚙️</button>
+      </div>
+    </div>
+  );
+}
