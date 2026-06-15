@@ -104,15 +104,15 @@ function Entrenos() {
       ))}
 
       {/* BOTONES */}
-      <div style={{ marginTop: 20, display: "flex", gap: 10 }}>
-        <button onClick={saveData} className="dayBtn">
-          💾 Guardar
-        </button>
+      <div className="bottomActions">
+  <button onClick={saveData} className="saveBtn">
+    💾 Guardar entreno
+  </button>
 
-        <button onClick={clearData} className="dayBtn">
-          🗑 Borrar
-        </button>
-      </div>
+  <button onClick={clearData} className="deleteBtn">
+    🗑 Borrar
+  </button>
+</div>
     </div>
   );
 }
@@ -291,22 +291,11 @@ export default function App() {
       {screen}
 
       {/* NAV BAR */}
-      <div
-        style={{
-          position: "fixed",
-          bottom: 0,
-          left: 0,
-          right: 0,
-          display: "flex",
-          justifyContent: "space-around",
-          background: "#111",
-          padding: 10
-        }}
-      >
-        <button onClick={() => setTab("entrenos")}>🏋️</button>
-        <button onClick={() => setTab("progreso")}>📊</button>
-        <button onClick={() => setTab("ajustes")}>⚙️</button>
-      </div>
+      <div className="bottomNav">
+  <button onClick={() => setTab("entrenos")}>🏋️ Entrenos</button>
+  <button onClick={() => setTab("progreso")}>📊 Progreso</button>
+  <button onClick={() => setTab("ajustes")}>⚙️ Ajustes</button>
+</div>
     </div>
   );
 }
