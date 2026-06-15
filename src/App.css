@@ -1,114 +1,616 @@
+:root {
+  --bg: #f4f1ea;
+  --surface: #fffdf9;
+  --surface-soft: #ebe8df;
+  --ink: #171717;
+  --muted: #77736d;
+  --line: rgba(28, 28, 28, 0.09);
+  --sage: #8d9a8a;
+  --sage-strong: #697867;
+  --coral: #ee6f5f;
+  --danger: #d75d59;
+  --shadow: 0 18px 45px rgba(30, 28, 24, 0.1);
+  --radius: 8px;
+  font: 16px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  letter-spacing: 0;
+  color: var(--ink);
+  background: var(--bg);
+}
+
+* {
+  box-sizing: border-box;
+  letter-spacing: 0;
+}
+
+html {
+  background: var(--bg);
+}
+
 body {
+  min-height: 100svh;
   margin: 0;
-  background: #0f0f0f;
-  color: white;
-  font-family: Arial, Helvetica, sans-serif;
+  color: var(--ink);
+  background: var(--bg);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
 
-.app {
-  padding-bottom: 70px;
+#root {
+  width: 100%;
+  max-width: none;
+  min-height: 100svh;
+  margin: 0;
+  border: 0;
+  text-align: left;
 }
 
-.content {
-  padding: 20px;
+button,
+input,
+select,
+textarea {
+  font: inherit;
 }
 
-.title {
-  color: white;
-  font-size: 22px;
-  text-align: center;
-  margin-top: 20px;
+button {
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
 }
 
-.navDays {
+input,
+select,
+textarea {
+  width: 100%;
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+  color: var(--ink);
+  background: #f3f0e9;
+  outline: none;
+  transition: border-color 180ms ease, background 180ms ease, box-shadow 180ms ease;
+}
+
+input,
+select {
+  min-height: 44px;
+  padding: 10px 12px;
+}
+
+textarea {
+  resize: vertical;
+  min-height: 70px;
+  padding: 10px 12px;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  border-color: rgba(105, 120, 103, 0.55);
+  background: var(--surface);
+  box-shadow: 0 0 0 4px rgba(141, 154, 138, 0.14);
+}
+
+h1,
+h2,
+h3,
+p {
+  margin: 0;
+}
+
+.appShell {
+  position: relative;
+  width: min(100%, 540px);
+  min-height: 100svh;
+  margin: 0 auto;
+  padding: 16px 16px 108px;
+}
+
+.appHeader {
+  position: sticky;
+  top: 0;
+  z-index: 10;
   display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  margin: 10px 0;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 0 16px;
+  background: linear-gradient(180deg, var(--bg) 72%, rgba(244, 241, 234, 0));
+  backdrop-filter: blur(14px);
 }
 
-.dayBtn {
-  background: #1f1f1f;
-  color: white;
-  border: none;
-  padding: 8px;
-  margin: 5px;
-  border-radius: 8px;
+.brandBlock {
+  display: grid;
+  justify-items: center;
+  line-height: 1.1;
 }
 
-.day {
-  text-align: center;
-  color: #ff4d6d;
+.brandBlock span {
+  color: var(--sage-strong);
+  font-size: 0.78rem;
+  font-weight: 800;
+  text-transform: uppercase;
 }
 
-.card {
-  background: #1c1c1c;
+.brandBlock strong {
+  color: var(--ink);
+  font-size: 1.08rem;
+}
+
+.iconButton {
+  display: inline-grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border: 0;
+  border-radius: 50%;
+  color: var(--ink);
+  background: rgba(255, 253, 249, 0.74);
+  box-shadow: 0 8px 22px rgba(30, 28, 24, 0.08);
+  font-size: 0.76rem;
+  font-weight: 900;
+}
+
+.iconButton.muted {
+  color: var(--sage-strong);
+}
+
+.appContent {
+  animation: screenIn 280ms ease both;
+}
+
+.screen {
+  display: grid;
+  gap: 18px;
+}
+
+.planCard,
+.panel,
+.exerciseCard,
+.metricCard {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: rgba(255, 253, 249, 0.86);
+  box-shadow: var(--shadow);
+}
+
+.planCard {
+  display: grid;
+  grid-template-columns: 78px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 14px;
   padding: 12px;
-  border-radius: 12px;
-  margin: 10px 0;
 }
-.card input {
-  background: #2a2a2a;
-  border: none;
-  padding: 8px;
-  color: white;
-  border-radius: 6px;
+
+.planMark {
+  display: grid;
+  place-items: center;
+  width: 78px;
+  aspect-ratio: 1;
+  border-radius: var(--radius);
+  color: #fff;
+  background:
+    linear-gradient(135deg, rgba(23, 23, 23, 0.34), rgba(23, 23, 23, 0.72)),
+    linear-gradient(135deg, var(--sage), var(--coral));
+  font-size: 1.1rem;
+  font-weight: 900;
+}
+
+.planCard h2,
+.panel h2 {
+  color: var(--ink);
+  font-size: 1.35rem;
+  line-height: 1.1;
+}
+
+.planCard p,
+.exerciseCard p,
+.metricCard small,
+.emptyState {
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.eyebrow {
+  display: block;
+  margin-bottom: 4px;
+  color: var(--muted);
+  font-size: 0.76rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.completionBadge {
+  display: grid;
+  place-items: center;
+  width: 54px;
+  height: 54px;
+  border-radius: 50%;
+  color: var(--sage-strong);
+  background:
+    radial-gradient(circle closest-side, var(--surface) 72%, transparent 73%),
+    conic-gradient(var(--sage) var(--progress, 0%), rgba(141, 154, 138, 0.15) 0);
+  box-shadow: inset 0 0 0 1px var(--line);
+  font-size: 0.9rem;
+  font-weight: 900;
+}
+
+.daySelector {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 3px;
+  scrollbar-width: none;
+}
+
+.daySelector::-webkit-scrollbar {
+  display: none;
+}
+
+.dayPill {
+  flex: 1 0 auto;
+  min-width: 82px;
+  min-height: 42px;
+  border: 0;
+  border-radius: 999px;
+  color: var(--muted);
+  background: rgba(255, 253, 249, 0.6);
+  font-weight: 800;
+  transition: transform 180ms ease, color 180ms ease, background 180ms ease;
+}
+
+.dayPill.active {
+  color: #fff;
+  background: var(--sage);
+}
+
+.dayPill:active,
+.navItem:active,
+.primaryAction:active,
+.secondaryAction:active,
+.ghostAction:active,
+.dangerAction:active {
+  transform: scale(0.98);
+}
+
+.sectionHeader,
+.panelHeader,
+.exerciseHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.sectionHeader h1 {
+  color: var(--ink);
+  font-size: 2rem;
+  line-height: 1.05;
+}
+
+.sessionTag,
+.exerciseStatus,
+.balanceStatus {
+  flex: 0 0 auto;
+  border-radius: 999px;
+  padding: 7px 10px;
+  color: var(--sage-strong);
+  background: rgba(141, 154, 138, 0.14);
+  font-size: 0.78rem;
+  font-weight: 850;
+}
+
+.exerciseList {
+  display: grid;
+  gap: 12px;
+}
+
+.exerciseCard {
+  display: grid;
+  gap: 14px;
+  padding: 14px;
+}
+
+.exerciseFocus {
+  display: inline-flex;
+  margin-bottom: 4px;
+  color: var(--coral);
+  font-size: 0.78rem;
+  font-weight: 850;
+}
+
+.exerciseCard h3 {
+  color: var(--ink);
+  font-size: 1.12rem;
+  line-height: 1.16;
+}
+
+.inputGrid,
+.settingsGrid,
+.metricGrid,
+.balanceGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.inputGrid label,
+.settingsGrid label,
+.notesField {
+  display: grid;
+  gap: 6px;
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 850;
+}
+
+.notesField {
+  grid-template-columns: 1fr;
+}
+
+.bottomActions {
+  position: sticky;
+  bottom: 86px;
+  z-index: 8;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 10px;
+  padding: 10px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: rgba(255, 253, 249, 0.82);
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(18px);
+}
+
+.primaryAction,
+.secondaryAction,
+.ghostAction,
+.dangerAction {
+  min-height: 46px;
+  border: 0;
+  border-radius: 999px;
+  padding: 0 18px;
+  font-weight: 900;
+  transition: transform 180ms ease, box-shadow 180ms ease, background 180ms ease;
+}
+
+.primaryAction {
+  color: #fff;
+  background: #202020;
+  box-shadow: 0 12px 24px rgba(32, 32, 32, 0.18);
+}
+
+.secondaryAction {
+  color: #fff;
+  background: var(--sage-strong);
+}
+
+.ghostAction {
+  color: var(--ink);
+  background: var(--surface-soft);
+}
+
+.dangerAction {
+  color: #fff;
+  background: var(--danger);
+}
+
+.fullWidth {
+  width: 100%;
+  margin-top: 16px;
+}
+
+.panel {
+  display: grid;
+  gap: 14px;
+  padding: 14px;
+}
+
+.accentPanel {
+  background: linear-gradient(135deg, rgba(141, 154, 138, 0.16), rgba(238, 111, 95, 0.1)), var(--surface);
+}
+
+.metricGrid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.recordList {
+  display: grid;
+  gap: 10px;
+}
+
+.metricCard {
+  display: grid;
+  gap: 5px;
+  min-height: 92px;
+  padding: 12px;
+  box-shadow: none;
+}
+
+.metricCard span {
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 850;
+}
+
+.metricCard strong {
+  color: var(--ink);
+  font-size: 1.35rem;
+  line-height: 1.1;
+}
+
+.progressRow {
+  display: grid;
+  gap: 8px;
+}
+
+.progressCopy {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  color: var(--ink);
+}
+
+.progressCopy span {
+  color: var(--muted);
+  font-size: 0.9rem;
+  font-weight: 750;
+}
+
+.progressTrack {
+  height: 9px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(23, 23, 23, 0.08);
+}
+
+.progressFill {
+  height: 100%;
+  min-width: 9px;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--sage-strong), var(--coral));
+  transition: width 260ms ease;
+}
+
+.emptyState {
+  display: grid;
+  place-items: center;
+  min-height: 76px;
+  border: 1px dashed var(--line);
+  border-radius: var(--radius);
+  background: rgba(255, 255, 255, 0.34);
+}
+
+.toolActions {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
 }
 
 .bottomNav {
   position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 65px;
-  background: #151515;
-  display: flex;
-  justify-content: space-around;
-  align-items: center;
-  border-top: 1px solid #2a2a2a;
+  right: 16px;
+  bottom: calc(14px + env(safe-area-inset-bottom));
+  left: 16px;
+  z-index: 20;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+  width: min(calc(100% - 32px), 508px);
+  margin: 0 auto;
+  padding: 8px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: rgba(32, 32, 32, 0.92);
+  box-shadow: 0 18px 35px rgba(22, 20, 18, 0.24);
+  backdrop-filter: blur(20px);
 }
 
-.bottomNav button {
-  background: none;
-  border: none;
-  color: white;
-  font-size: 14px;
-  font-weight: bold;
+.navItem {
+  display: grid;
+  place-items: center;
+  gap: 2px;
+  min-height: 56px;
+  border: 0;
+  border-radius: 999px;
+  color: rgba(255, 255, 255, 0.55);
+  background: transparent;
+  font-size: 0.72rem;
+  font-weight: 850;
+  transition: color 180ms ease, background 180ms ease, transform 180ms ease;
 }
 
-input, select {
-  width: 100%;
-  padding: 10px;
-  margin-top: 6px;
-  border-radius: 8px;
-  border: none;
-  background: #2a2a2a;
-  color: white;
-}
-.bottomActions {
-  position: sticky;
-  bottom: 80px;
-  display: flex;
-  gap: 10px;
-  padding: 10px;
-  background: #0f0f0f;
+.navItem.active {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.12);
 }
 
-.saveBtn {
-  flex: 1;
-  padding: 12px;
-  background: #ff4d6d;
-  border: none;
-  color: white;
-  border-radius: 10px;
-  font-weight: bold;
+.navIcon {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  color: currentColor;
+  font-size: 0.75rem;
+  font-weight: 950;
 }
 
-.deleteBtn {
-  flex: 1;
-  padding: 12px;
-  background: #333;
-  border: none;
-  color: white;
-  border-radius: 10px;
+@keyframes screenIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (min-width: 760px) {
+  .appShell {
+    padding-top: 22px;
+  }
+
+  .recordList {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #111211;
+    --surface: #1b1c1a;
+    --surface-soft: #242620;
+    --ink: #f7f4ee;
+    --muted: #aaa59b;
+    --line: rgba(255, 255, 255, 0.08);
+    --sage: #95a58f;
+    --sage-strong: #b1c1aa;
+    --coral: #f18a78;
+    --shadow: 0 18px 45px rgba(0, 0, 0, 0.28);
+  }
+
+  input,
+  select,
+  textarea {
+    background: #242620;
+  }
+
+  .appHeader {
+    background: linear-gradient(180deg, var(--bg) 72%, rgba(17, 18, 17, 0));
+  }
+
+  .planCard,
+  .panel,
+  .exerciseCard,
+  .metricCard,
+  .bottomActions {
+    background: rgba(27, 28, 26, 0.9);
+  }
+
+  .iconButton {
+    background: rgba(27, 28, 26, 0.88);
+  }
+
+  .primaryAction {
+    color: #171717;
+    background: #f7f4ee;
+  }
+
+  .bottomNav {
+    background: rgba(8, 8, 8, 0.92);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
 }

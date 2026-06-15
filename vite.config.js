@@ -10,16 +10,24 @@ export default defineConfig({
       manifest: {
         name: 'SymmetryFit',
         short_name: 'SymmetryFit',
-        description: 'Gym tracker personal',
-        theme_color: '#0f0f0f',
-        background_color: '#0f0f0f',
+        description: 'Registro personal de entrenamientos, progreso y simetria',
+        theme_color: '#f4f1ea',
+        background_color: '#f4f1ea',
         display: 'standalone',
         start_url: '/',
+        scope: '/',
         icons: [
           {
-            src: 'icon.png',
+            src: 'pwa-192x192.png',
             sizes: '192x192',
-            type: 'image/png'
+            type: 'image/png',
+            purpose: 'any maskable'
+          },
+          {
+            src: 'pwa-512x512.png',
+            sizes: '512x512',
+            type: 'image/png',
+            purpose: 'any maskable'
           }
         ]
       }

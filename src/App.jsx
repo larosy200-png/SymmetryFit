@@ -1,34 +1,108 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import "./App.css";
 
-const getWorkoutData = () => {
-  const raw = localStorage.getItem("symmetryfit-data");
-  return raw ? JSON.parse(raw) : {};
+const STORAGE_KEYS = {
+  workouts: "symmetryfit-data",
+  profile: "symmetryfit-profile"
 };
 
-const calculatePRs = () => {
-  const data = getWorkoutData();
+const initialProfile = {
+  weight: "",
+  height: "",
+  goal: "hipertrofia",
+  level: "principiante"
+};
 
-  let prs = {
+const routines = {
+  Lunes: [
+    { name: "Hip Thrust", focus: "Gluteo", detail: "Fuerza principal" },
+    { name: "Prensa", focus: "Pierna", detail: "Volumen controlado" },
+    { name: "Patada gluteo", focus: "Gluteo", detail: "Conexion mente-musculo" },
+    { name: "Aductores", focus: "Pierna", detail: "Estabilidad" },
+    { name: "Abductores", focus: "Gluteo", detail: "Activacion lateral" }
+  ],
+  Martes: [
+    { name: "Jalon", focus: "Espalda", detail: "Tirones" },
+    { name: "Remo", focus: "Espalda", detail: "Densidad" },
+    { name: "Face Pull", focus: "Hombro", detail: "Postura" },
+    { name: "Biceps", focus: "Brazos", detail: "Accesorio" },
+    { name: "Triceps", focus: "Brazos", detail: "Accesorio" },
+    { name: "Abs", focus: "Core", detail: "Control" }
+  ],
+  Jueves: [
+    { name: "Hip Thrust ligero", focus: "Gluteo", detail: "Tecnica y bombeo" },
+    { name: "Patada izquierda", focus: "Gluteo izquierdo", detail: "Trabajo unilateral" },
+    { name: "Patada derecha", focus: "Gluteo derecho", detail: "Trabajo unilateral" },
+    { name: "Abductores", focus: "Gluteo", detail: "Lateral" },
+    { name: "Puente gluteo", focus: "Gluteo", detail: "Finalizador" }
+  ],
+  Viernes: [
+    { name: "Hip Thrust", focus: "Gluteo", detail: "Carga alta" },
+    { name: "Smith squat", focus: "Pierna", detail: "Fuerza" },
+    { name: "Prensa", focus: "Pierna", detail: "Volumen" },
+    { name: "Aductores", focus: "Pierna", detail: "Estabilidad" },
+    { name: "Abductores", focus: "Gluteo", detail: "Activacion lateral" }
+  ]
+};
+
+const dayMeta = {
+  Lunes: "Lower A",
+  Martes: "Upper + Core",
+  Jueves: "Glute Focus",
+  Viernes: "Lower B"
+};
+
+const tabs = [
+  { id: "entrenos", label: "Entrenos", icon: "W" },
+  { id: "progreso", label: "Progreso", icon: "P" },
+  { id: "ajustes", label: "Ajustes", icon: "A" }
+];
+
+const readStoredJson = (key, fallback) => {
+  try {
+    const raw = localStorage.getItem(key);
+    return raw ? JSON.parse(raw) : fallback;
+  } catch {
+    return fallback;
+  }
+};
+
+const toNumber = (value) => Number(value || 0);
+
+const isEntryFilled = (entry = {}) =>
+  Boolean(entry.peso || entry.reps || entry.series || entry.rpe || entry.notes);
+
+const getCompletion = (workouts, day) => {
+  const exercises = routines[day];
+  const completed = exercises.filter((exercise) =>
+    isEntryFilled(workouts?.[day]?.[exercise.name])
+  ).length;
+
+  return Math.round((completed / exercises.length) * 100);
+};
+
+const calculatePRs = (workouts) => {
+  const prs = {
     hipThrust: 0,
     prensa: 0,
     smithSquat: 0
   };
 
-  Object.values(data).forEach((day) => {
+  Object.values(workouts || {}).forEach((day) => {
     Object.entries(day || {}).forEach(([exercise, values]) => {
-      const weight = Number(values?.peso || 0);
+      const weight = toNumber(values?.peso);
+      const normalized = exercise.toLowerCase();
 
-      if (exercise.toLowerCase().includes("hip thrust")) {
-        if (weight > prs.hipThrust) prs.hipThrust = weight;
+      if (normalized.includes("hip thrust")) {
+        prs.hipThrust = Math.max(prs.hipThrust, weight);
       }
 
-      if (exercise.toLowerCase().includes("prensa")) {
-        if (weight > prs.prensa) prs.prensa = weight;
+      if (normalized.includes("prensa")) {
+        prs.prensa = Math.max(prs.prensa, weight);
       }
 
-      if (exercise.toLowerCase().includes("smith")) {
-        if (weight > prs.smithSquat) prs.smithSquat = weight;
+      if (normalized.includes("smith")) {
+        prs.smithSquat = Math.max(prs.smithSquat, weight);
       }
     });
   });
@@ -36,20 +110,316 @@ const calculatePRs = () => {
   return prs;
 };
 
-const routines = {
-  "Lunes": ["Hip Thrust", "Prensa", "Patada glúteo", "Aductores", "Abductores"],
-  "Martes": ["Jalón", "Remo", "Face Pull", "Bíceps", "Tríceps", "Abs"],
-  "Jueves": ["Hip Thrust ligero", "Patada izquierda", "Abductores", "Puente glúteo"],
-  "Viernes": ["Hip Thrust", "Smith squat", "Prensa", "Aductores", "Abductores"]
-};
-function Entrenos() {
-  const [day, setDay] = useState("Lunes");
+const calculateStats = (workouts) => {
+  let exercisesLogged = 0;
+  let totalVolume = 0;
+  let activeDays = 0;
 
-  // 📦 estado para guardar datos
-  const [data, setData] = useState({});
+  Object.values(workouts || {}).forEach((day) => {
+    const entries = Object.values(day || {}).filter(isEntryFilled);
+
+    if (entries.length > 0) {
+      activeDays += 1;
+    }
+
+    entries.forEach((entry) => {
+      exercisesLogged += 1;
+      totalVolume += toNumber(entry.peso) * toNumber(entry.reps) * toNumber(entry.series || 1);
+    });
+  });
+
+  return {
+    activeDays,
+    exercisesLogged,
+    totalVolume
+  };
+};
+
+const buildEvolution = (workouts, exerciseName) =>
+  Object.entries(workouts || {})
+    .map(([day, exercises]) => {
+      const match = Object.entries(exercises || {}).find(([name]) =>
+        name.toLowerCase().includes(exerciseName)
+      );
+
+      return match ? { label: day, value: toNumber(match[1]?.peso) } : null;
+    })
+    .filter(Boolean);
+
+const calculateGluteBalance = (workouts) => {
+  let left = 0;
+  let right = 0;
+
+  Object.values(workouts || {}).forEach((day) => {
+    Object.entries(day || {}).forEach(([exercise, values]) => {
+      const normalized = exercise.toLowerCase();
+
+      if (normalized.includes("izquierda")) {
+        left = Math.max(left, toNumber(values?.peso));
+      }
+
+      if (normalized.includes("derecha")) {
+        right = Math.max(right, toNumber(values?.peso));
+      }
+    });
+  });
+
+  if (!left && !right) {
+    return { left, right, diff: 0, status: "Pendiente" };
+  }
+
+  const max = Math.max(left, right);
+  const diff = max ? Math.round((Math.abs(left - right) / max) * 100) : 0;
+  const status = diff >= 12 ? "Revisar asimetria" : "Equilibrada";
+
+  return { left, right, diff, status };
+};
+
+const formatDate = (date) =>
+  new Intl.DateTimeFormat("es-ES", {
+    day: "2-digit",
+    month: "long",
+    year: "numeric"
+  }).format(date);
+
+const escapeHtml = (value) =>
+  String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+
+const buildReportHtml = ({ profile, workouts }) => {
+  const prs = calculatePRs(workouts);
+  const stats = calculateStats(workouts);
+  const balance = calculateGluteBalance(workouts);
+  const generatedAt = formatDate(new Date());
+  const workoutSections = Object.entries(workouts || {})
+    .filter(([, exercises]) => Object.values(exercises || {}).some(isEntryFilled))
+    .map(([day, exercises]) => {
+      const rows = Object.entries(exercises || {})
+        .filter(([, values]) => isEntryFilled(values))
+        .map(
+          ([exercise, values]) => `
+            <tr>
+              <td>${escapeHtml(exercise)}</td>
+              <td>${escapeHtml(values.peso || "-")}</td>
+              <td>${escapeHtml(values.series || "-")}</td>
+              <td>${escapeHtml(values.reps || "-")}</td>
+              <td>${escapeHtml(values.rpe || "-")}</td>
+              <td>${escapeHtml(values.notes || "-")}</td>
+            </tr>
+          `
+        )
+        .join("");
+
+      return `
+        <section>
+          <h2>${escapeHtml(day)}</h2>
+          <table>
+            <thead>
+              <tr>
+                <th>Ejercicio</th>
+                <th>Peso</th>
+                <th>Series</th>
+                <th>Reps</th>
+                <th>RPE</th>
+                <th>Notas</th>
+              </tr>
+            </thead>
+            <tbody>${rows}</tbody>
+          </table>
+        </section>
+      `;
+    })
+    .join("");
+
+  return `
+    <!doctype html>
+    <html lang="es">
+      <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>Informe SymmetryFit</title>
+        <style>
+          * { box-sizing: border-box; }
+          body {
+            margin: 0;
+            padding: 32px;
+            color: #171717;
+            background: #f4f1ea;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+          }
+          main {
+            max-width: 860px;
+            margin: 0 auto;
+            padding: 28px;
+            border-radius: 12px;
+            background: #fffdf9;
+          }
+          header {
+            display: flex;
+            justify-content: space-between;
+            gap: 24px;
+            border-bottom: 1px solid #e4ded2;
+            padding-bottom: 20px;
+            margin-bottom: 24px;
+          }
+          h1, h2, h3, p { margin: 0; }
+          h1 { font-size: 34px; }
+          h2 { font-size: 20px; margin: 24px 0 12px; }
+          h3 { font-size: 14px; color: #77736d; text-transform: uppercase; }
+          p { color: #77736d; }
+          .grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin: 16px 0;
+          }
+          .card {
+            min-height: 92px;
+            padding: 14px;
+            border: 1px solid #e4ded2;
+            border-radius: 10px;
+            background: #f7f4ee;
+          }
+          .card strong {
+            display: block;
+            margin-top: 8px;
+            font-size: 24px;
+          }
+          table {
+            width: 100%;
+            border-collapse: collapse;
+            overflow: hidden;
+            border-radius: 10px;
+            background: #fff;
+          }
+          th, td {
+            border-bottom: 1px solid #eee8dc;
+            padding: 10px;
+            text-align: left;
+            vertical-align: top;
+            font-size: 13px;
+          }
+          th {
+            color: #77736d;
+            background: #f7f4ee;
+            font-size: 12px;
+            text-transform: uppercase;
+          }
+          .printActions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-bottom: 18px;
+          }
+          button {
+            min-height: 42px;
+            border: 0;
+            border-radius: 999px;
+            padding: 0 16px;
+            color: #fff;
+            background: #202020;
+            font-weight: 800;
+          }
+          @media print {
+            body { padding: 0; background: #fff; }
+            main { max-width: none; padding: 0; }
+            .printActions { display: none; }
+          }
+        </style>
+      </head>
+      <body>
+        <main>
+          <div class="printActions">
+            <button onclick="window.print()">Guardar como PDF</button>
+          </div>
+
+          <header>
+            <div>
+              <h1>SymmetryFit</h1>
+              <p>Informe de entrenamiento</p>
+            </div>
+            <p>${escapeHtml(generatedAt)}</p>
+          </header>
+
+          <section>
+            <h3>Perfil</h3>
+            <div class="grid">
+              <div class="card"><span>Peso</span><strong>${escapeHtml(profile.weight || "-")} kg</strong></div>
+              <div class="card"><span>Altura</span><strong>${escapeHtml(profile.height || "-")} cm</strong></div>
+              <div class="card"><span>Objetivo</span><strong>${escapeHtml(profile.goal || "-")}</strong></div>
+            </div>
+          </section>
+
+          <section>
+            <h3>Resumen</h3>
+            <div class="grid">
+              <div class="card"><span>Volumen total</span><strong>${stats.totalVolume} kg</strong></div>
+              <div class="card"><span>Ejercicios</span><strong>${stats.exercisesLogged}</strong></div>
+              <div class="card"><span>Dias activos</span><strong>${stats.activeDays}</strong></div>
+            </div>
+          </section>
+
+          <section>
+            <h3>Records</h3>
+            <div class="grid">
+              <div class="card"><span>Hip Thrust</span><strong>${prs.hipThrust} kg</strong></div>
+              <div class="card"><span>Prensa</span><strong>${prs.prensa} kg</strong></div>
+              <div class="card"><span>Smith Squat</span><strong>${prs.smithSquat} kg</strong></div>
+            </div>
+          </section>
+
+          <section>
+            <h3>Simetria gluteo</h3>
+            <div class="grid">
+              <div class="card"><span>Izquierdo</span><strong>${balance.left} kg</strong></div>
+              <div class="card"><span>Derecho</span><strong>${balance.right} kg</strong></div>
+              <div class="card"><span>Diferencia</span><strong>${balance.diff}%</strong></div>
+            </div>
+          </section>
+
+          ${workoutSections || "<section><h2>Entrenos</h2><p>No hay entrenos guardados todavia.</p></section>"}
+        </main>
+      </body>
+    </html>
+  `;
+};
+
+function MetricCard({ label, value, caption }) {
+  return (
+    <article className="metricCard">
+      <span>{label}</span>
+      <strong>{value}</strong>
+      <small>{caption}</small>
+    </article>
+  );
+}
+
+function ProgressBar({ label, value, max }) {
+  const width = max ? Math.min((value / max) * 100, 100) : 0;
+
+  return (
+    <div className="progressRow">
+      <div className="progressCopy">
+        <strong>{label}</strong>
+        <span>{value} kg</span>
+      </div>
+      <div className="progressTrack" aria-hidden="true">
+        <div className="progressFill" style={{ width: `${width}%` }} />
+      </div>
+    </div>
+  );
+}
+
+function Entrenos({ workouts, setWorkouts, saveWorkouts, clearWorkouts }) {
+  const [day, setDay] = useState("Lunes");
+  const completion = getCompletion(workouts, day);
 
   const handleChange = (exercise, field, value) => {
-    setData((prev) => ({
+    setWorkouts((prev) => ({
       ...prev,
       [day]: {
         ...prev[day],
@@ -61,143 +431,371 @@ function Entrenos() {
     }));
   };
 
-  const saveData = () => {
-    localStorage.setItem("symmetryfit-data", JSON.stringify(data));
-    alert("✔ Entreno guardado");
-  };
-
-  const clearData = () => {
-    localStorage.removeItem("symmetryfit-data");
-    setData({});
-    alert("🗑 Datos eliminados");
-  };
-
   return (
-    <div>
-      <h2 className="title">🏋️ Entrenos</h2>
+    <div className="screen">
+      <section className="planCard">
+        <div className="planMark" aria-hidden="true">
+          SF
+        </div>
+        <div>
+          <span className="eyebrow">Plan actual</span>
+          <h2>{dayMeta[day]}</h2>
+          <p>{routines[day].length} ejercicios programados</p>
+        </div>
+        <div
+          className="completionBadge"
+          style={{ "--progress": `${completion}%` }}
+          aria-label={`${completion}% completado`}
+        >
+          {completion}%
+        </div>
+      </section>
 
-      <div className="navDays">
-        {Object.keys(routines).map((d) => (
-          <button key={d} onClick={() => setDay(d)} className="dayBtn">
-            {d}
+      <div className="daySelector" aria-label="Seleccionar dia">
+        {Object.keys(routines).map((routineDay) => (
+          <button
+            type="button"
+            key={routineDay}
+            onClick={() => setDay(routineDay)}
+            className={routineDay === day ? "dayPill active" : "dayPill"}
+          >
+            {routineDay}
           </button>
         ))}
       </div>
 
-      <h3 className="day">{day}</h3>
-
-      {routines[day].map((ex, i) => (
-        <div key={i} className="card">
-          <h4>{ex}</h4>
-
-          <input
-            placeholder="Peso"
-            type="number"
-            onChange={(e) => handleChange(ex, "peso", e.target.value)}
-          />
-
-          <input
-            placeholder="Reps"
-            onChange={(e) => handleChange(ex, "reps", e.target.value)}
-          />
+      <div className="sectionHeader">
+        <div>
+          <span className="eyebrow">Entreno</span>
+          <h1>{day}</h1>
         </div>
-      ))}
+        <span className="sessionTag">Gym · 50 min</span>
+      </div>
 
-      {/* BOTONES */}
+      <div className="exerciseList">
+        {routines[day].map((exercise) => {
+          const entry = workouts?.[day]?.[exercise.name] || {};
+
+          return (
+            <article key={exercise.name} className="exerciseCard">
+              <div className="exerciseHeader">
+                <div>
+                  <span className="exerciseFocus">{exercise.focus}</span>
+                  <h3>{exercise.name}</h3>
+                  <p>{exercise.detail}</p>
+                </div>
+                <span className="exerciseStatus">
+                  {isEntryFilled(entry) ? "Hecho" : "Plan"}
+                </span>
+              </div>
+
+              <div className="inputGrid">
+                <label>
+                  Peso
+                  <input
+                    type="number"
+                    inputMode="decimal"
+                    placeholder="kg"
+                    value={entry.peso || ""}
+                    onChange={(event) =>
+                      handleChange(exercise.name, "peso", event.target.value)
+                    }
+                  />
+                </label>
+
+                <label>
+                  Series
+                  <input
+                    type="number"
+                    inputMode="numeric"
+                    placeholder="0"
+                    value={entry.series || ""}
+                    onChange={(event) =>
+                      handleChange(exercise.name, "series", event.target.value)
+                    }
+                  />
+                </label>
+
+                <label>
+                  Reps
+                  <input
+                    type="number"
+                    inputMode="numeric"
+                    placeholder="0"
+                    value={entry.reps || ""}
+                    onChange={(event) =>
+                      handleChange(exercise.name, "reps", event.target.value)
+                    }
+                  />
+                </label>
+
+                <label>
+                  RPE
+                  <input
+                    type="number"
+                    inputMode="decimal"
+                    min="1"
+                    max="10"
+                    step="0.5"
+                    placeholder="1-10"
+                    value={entry.rpe || ""}
+                    onChange={(event) =>
+                      handleChange(exercise.name, "rpe", event.target.value)
+                    }
+                  />
+                </label>
+              </div>
+
+              <label className="notesField">
+                Notas
+                <textarea
+                  rows="2"
+                  placeholder="Sensaciones, tecnica, molestias..."
+                  value={entry.notes || ""}
+                  onChange={(event) =>
+                    handleChange(exercise.name, "notes", event.target.value)
+                  }
+                />
+              </label>
+            </article>
+          );
+        })}
+      </div>
+
       <div className="bottomActions">
-  <button onClick={saveData} className="saveBtn">
-    💾 Guardar entreno
-  </button>
-
-  <button onClick={clearData} className="deleteBtn">
-    🗑 Borrar
-  </button>
-</div>
+        <button type="button" onClick={saveWorkouts} className="primaryAction">
+          Guardar entreno
+        </button>
+        <button type="button" onClick={clearWorkouts} className="ghostAction">
+          Borrar
+        </button>
+      </div>
     </div>
   );
 }
 
-function Progreso() {
-  const prs = calculatePRs();
-
-  const evolution = [
-    { week: "Semana 1", value: 60 },
-    { week: "Semana 2", value: 65 },
-    { week: "Semana 3", value: 70 },
-    { week: "Semana 4", value: 75 }
-  ];
+function Progreso({ workouts }) {
+  const prs = useMemo(() => calculatePRs(workouts), [workouts]);
+  const stats = useMemo(() => calculateStats(workouts), [workouts]);
+  const evolution = useMemo(() => buildEvolution(workouts, "hip thrust"), [workouts]);
+  const balance = useMemo(() => calculateGluteBalance(workouts), [workouts]);
+  const maxEvolution = Math.max(...evolution.map((item) => item.value), 0);
 
   return (
-    <div>
-      <h2 className="title">📊 Progreso</h2>
-
-      {/* 🏆 PRs */}
-      <div className="card">
-        <h3>🏆 PRs (máximos)</h3>
-
-        <p>🍑 Hip Thrust: <b>{prs.hipThrust} kg</b></p>
-        <p>🦵 Prensa: <b>{prs.prensa} kg</b></p>
-        <p>🏋️ Smith Squat: <b>{prs.smithSquat} kg</b></p>
+    <div className="screen">
+      <div className="sectionHeader">
+        <div>
+          <span className="eyebrow">Dashboard</span>
+          <h1>Progreso</h1>
+        </div>
+        <span className="sessionTag">{stats.activeDays} dias activos</span>
       </div>
 
-      {/* 📈 EVOLUCIÓN */}
-      <div className="card">
-        <h3>📈 Evolución (Hip Thrust)</h3>
+      <div className="metricGrid">
+        <MetricCard label="Volumen" value={`${stats.totalVolume} kg`} caption="carga total" />
+        <MetricCard label="Ejercicios" value={stats.exercisesLogged} caption="registrados" />
+      </div>
 
-        {evolution.map((item, i) => (
-          <div key={i} style={{ marginBottom: 12 }}>
-            <div style={{ display: "flex", justifyContent: "space-between" }}>
-              <strong>{item.week}</strong>
-              <span>{item.value} kg</span>
-            </div>
-
-            <div
-              style={{
-                height: 8,
-                background: "#2a2a2a",
-                borderRadius: 6,
-                marginTop: 5
-              }}
-            >
-              <div
-                style={{
-                  height: 8,
-                  width: `${(item.value / 100) * 100}%`,
-                  background: "#ff4d6d",
-                  borderRadius: 6
-                }}
-              />
-            </div>
+      <section className="panel">
+        <div className="panelHeader">
+          <div>
+            <span className="eyebrow">Records personales</span>
+            <h2>PRs principales</h2>
           </div>
-        ))}
-      </div>
+        </div>
+
+        <div className="recordList">
+          <MetricCard label="Hip Thrust" value={`${prs.hipThrust} kg`} caption="mejor carga" />
+          <MetricCard label="Prensa" value={`${prs.prensa} kg`} caption="mejor carga" />
+          <MetricCard label="Smith Squat" value={`${prs.smithSquat} kg`} caption="mejor carga" />
+        </div>
+      </section>
+
+      <section className="panel">
+        <div className="panelHeader">
+          <div>
+            <span className="eyebrow">Evolucion</span>
+            <h2>Hip Thrust</h2>
+          </div>
+        </div>
+
+        {evolution.length ? (
+          evolution.map((item) => (
+            <ProgressBar
+              key={item.label}
+              label={item.label}
+              value={item.value}
+              max={maxEvolution}
+            />
+          ))
+        ) : (
+          <div className="emptyState">Sin registros guardados todavia.</div>
+        )}
+      </section>
+
+      <section className="panel accentPanel">
+        <div className="panelHeader">
+          <div>
+            <span className="eyebrow">Gluteo</span>
+            <h2>Simetria izquierda/derecha</h2>
+          </div>
+          <span className="balanceStatus">{balance.status}</span>
+        </div>
+
+        <div className="balanceGrid">
+          <MetricCard label="Izquierdo" value={`${balance.left} kg`} caption="mejor carga" />
+          <MetricCard label="Derecho" value={`${balance.right} kg`} caption="mejor carga" />
+          <MetricCard label="Diferencia" value={`${balance.diff}%`} caption="asimetria" />
+        </div>
+      </section>
     </div>
   );
 }
 
-function Ajustes() {
-  const [profile, setProfile] = useState({
-    weight: "",
-    height: "",
-    goal: "hipertrofia",
-    level: "principiante"
-  });
+function Ajustes({ profile, setProfile, saveProfile, clearAll, exportData, exportReport }) {
+  return (
+    <div className="screen">
+      <div className="sectionHeader">
+        <div>
+          <span className="eyebrow">Cuenta</span>
+          <h1>Ajustes</h1>
+        </div>
+      </div>
+
+      <section className="panel">
+        <div className="panelHeader">
+          <div>
+            <span className="eyebrow">Perfil</span>
+            <h2>Datos personales</h2>
+          </div>
+        </div>
+
+        <div className="settingsGrid">
+          <label>
+            Peso
+            <input
+              type="number"
+              inputMode="decimal"
+              placeholder="kg"
+              value={profile.weight}
+              onChange={(event) =>
+                setProfile({ ...profile, weight: event.target.value })
+              }
+            />
+          </label>
+
+          <label>
+            Altura
+            <input
+              type="number"
+              inputMode="numeric"
+              placeholder="cm"
+              value={profile.height}
+              onChange={(event) =>
+                setProfile({ ...profile, height: event.target.value })
+              }
+            />
+          </label>
+
+          <label>
+            Objetivo
+            <select
+              value={profile.goal}
+              onChange={(event) =>
+                setProfile({ ...profile, goal: event.target.value })
+              }
+            >
+              <option value="hipertrofia">Hipertrofia</option>
+              <option value="fuerza">Fuerza</option>
+              <option value="definicion">Definicion</option>
+            </select>
+          </label>
+
+          <label>
+            Nivel
+            <select
+              value={profile.level}
+              onChange={(event) =>
+                setProfile({ ...profile, level: event.target.value })
+              }
+            >
+              <option value="principiante">Principiante</option>
+              <option value="intermedio">Intermedio</option>
+              <option value="avanzado">Avanzado</option>
+            </select>
+          </label>
+        </div>
+
+        <button type="button" onClick={saveProfile} className="primaryAction fullWidth">
+          Guardar perfil
+        </button>
+      </section>
+
+      <section className="panel">
+        <div className="panelHeader">
+          <div>
+            <span className="eyebrow">Datos</span>
+            <h2>Herramientas</h2>
+          </div>
+        </div>
+
+        <div className="toolActions">
+          <button type="button" onClick={exportReport} className="primaryAction">
+            Informe PDF
+          </button>
+          <button type="button" onClick={exportData} className="secondaryAction">
+            Exportar JSON
+          </button>
+          <button type="button" onClick={clearAll} className="dangerAction">
+            Borrar todo
+          </button>
+        </div>
+      </section>
+    </div>
+  );
+}
+
+export default function App() {
+  const [tab, setTab] = useState("entrenos");
+  const [workouts, setWorkouts] = useState(() =>
+    readStoredJson(STORAGE_KEYS.workouts, {})
+  );
+  const [profile, setProfile] = useState(() => ({
+    ...initialProfile,
+    ...readStoredJson(STORAGE_KEYS.profile, {})
+  }));
+
+  const saveWorkouts = () => {
+    localStorage.setItem(STORAGE_KEYS.workouts, JSON.stringify(workouts));
+    window.alert("Entreno guardado");
+  };
+
+  const clearWorkouts = () => {
+    if (!window.confirm("Quieres borrar los entrenos guardados?")) return;
+
+    localStorage.removeItem(STORAGE_KEYS.workouts);
+    setWorkouts({});
+  };
 
   const saveProfile = () => {
-    localStorage.setItem("symmetryfit-profile", JSON.stringify(profile));
-    alert("✔ Perfil guardado");
+    localStorage.setItem(STORAGE_KEYS.profile, JSON.stringify(profile));
+    window.alert("Perfil guardado");
   };
 
   const clearAll = () => {
-    localStorage.removeItem("symmetryfit-profile");
-    localStorage.removeItem("symmetryfit-data");
-    alert("🗑 Todo eliminado");
+    if (!window.confirm("Quieres borrar perfil y entrenos?")) return;
+
+    localStorage.removeItem(STORAGE_KEYS.profile);
+    localStorage.removeItem(STORAGE_KEYS.workouts);
+    setProfile(initialProfile);
+    setWorkouts({});
   };
 
   const exportData = () => {
     const data = {
-      profile: JSON.parse(localStorage.getItem("symmetryfit-profile")),
-      workouts: JSON.parse(localStorage.getItem("symmetryfit-data"))
+      profile,
+      workouts,
+      exportedAt: new Date().toISOString()
     };
 
     const blob = new Blob([JSON.stringify(data, null, 2)], {
@@ -205,97 +803,96 @@ function Ajustes() {
     });
 
     const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "symmetryfit-data.json";
-    a.click();
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "symmetryfit-data.json";
+    link.click();
+    URL.revokeObjectURL(url);
   };
 
-  return (
-    <div>
-      <h2 className="title">⚙️ Ajustes</h2>
+  const exportReport = () => {
+    const reportWindow = window.open("", "_blank", "noopener,noreferrer");
+    const reportHtml = buildReportHtml({ profile, workouts });
 
-      {/* 👤 PERFIL */}
-      <div className="card">
-        <h3>👤 Perfil</h3>
+    if (!reportWindow) {
+      const blob = new Blob([reportHtml], { type: "text/html" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "symmetryfit-informe.html";
+      link.click();
+      URL.revokeObjectURL(url);
+      return;
+    }
 
-        <input
-          placeholder="Peso (kg)"
-          value={profile.weight}
-          onChange={(e) =>
-            setProfile({ ...profile, weight: e.target.value })
-          }
-        />
+    reportWindow.document.open();
+    reportWindow.document.write(reportHtml);
+    reportWindow.document.close();
+  };
 
-        <input
-          placeholder="Altura (cm)"
-          value={profile.height}
-          onChange={(e) =>
-            setProfile({ ...profile, height: e.target.value })
-          }
-        />
-
-        <select
-          value={profile.goal}
-          onChange={(e) =>
-            setProfile({ ...profile, goal: e.target.value })
-          }
-        >
-          <option value="hipertrofia">Hipertrofia</option>
-          <option value="fuerza">Fuerza</option>
-          <option value="definicion">Definición</option>
-        </select>
-
-        <select
-          value={profile.level}
-          onChange={(e) =>
-            setProfile({ ...profile, level: e.target.value })
-          }
-        >
-          <option value="principiante">Principiante</option>
-          <option value="intermedio">Intermedio</option>
-          <option value="avanzado">Avanzado</option>
-        </select>
-
-        <button onClick={saveProfile} className="dayBtn">
-          💾 Guardar perfil
-        </button>
-      </div>
-
-      {/* 🧰 HERRAMIENTAS */}
-      <div className="card">
-        <h3>🧰 Herramientas</h3>
-
-        <button onClick={clearAll} className="dayBtn">
-          🗑 Borrar todo
-        </button>
-
-        <button onClick={exportData} className="dayBtn">
-          📤 Exportar datos
-        </button>
-      </div>
-    </div>
-  );
-}
-export default function App() {
-  const [tab, setTab] = useState("entrenos");
-
-  let screen;
-
-  if (tab === "entrenos") screen = <Entrenos />;
-  if (tab === "progreso") screen = <Progreso />;
-  if (tab === "ajustes") screen = <Ajustes />;
+  const screen = {
+    entrenos: (
+      <Entrenos
+        workouts={workouts}
+        setWorkouts={setWorkouts}
+        saveWorkouts={saveWorkouts}
+        clearWorkouts={clearWorkouts}
+      />
+    ),
+    progreso: <Progreso workouts={workouts} />,
+    ajustes: (
+      <Ajustes
+        profile={profile}
+        setProfile={setProfile}
+        saveProfile={saveProfile}
+        clearAll={clearAll}
+        exportData={exportData}
+        exportReport={exportReport}
+      />
+    )
+  }[tab];
 
   return (
-    <div>
-      {screen}
+    <div className="appShell">
+      <header className="appHeader">
+        <button
+          type="button"
+          className="iconButton"
+          onClick={() => setTab("ajustes")}
+          aria-label="Abrir ajustes"
+        >
+          SF
+        </button>
+        <div className="brandBlock">
+          <span>SymmetryFit</span>
+          <strong>{tabs.find((item) => item.id === tab)?.label}</strong>
+        </div>
+        <button
+          type="button"
+          className="iconButton muted"
+          onClick={() => setTab("progreso")}
+          aria-label="Abrir progreso"
+        >
+          PR
+        </button>
+      </header>
 
-      {/* NAV BAR */}
-      <div className="bottomNav">
-  <button onClick={() => setTab("entrenos")}>🏋️ Entrenos</button>
-  <button onClick={() => setTab("progreso")}>📊 Progreso</button>
-  <button onClick={() => setTab("ajustes")}>⚙️ Ajustes</button>
-</div>
+      <main className="appContent">{screen}</main>
+
+      <nav className="bottomNav" aria-label="Navegacion principal">
+        {tabs.map((item) => (
+          <button
+            type="button"
+            key={item.id}
+            onClick={() => setTab(item.id)}
+            className={tab === item.id ? "navItem active" : "navItem"}
+            aria-current={tab === item.id ? "page" : undefined}
+          >
+            <span className="navIcon">{item.icon}</span>
+            <span>{item.label}</span>
+          </button>
+        ))}
+      </nav>
     </div>
   );
 }
