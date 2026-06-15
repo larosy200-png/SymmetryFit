@@ -118,14 +118,8 @@ function Entrenos() {
 }
 
 function Progreso() {
-  // 🔥 PRs (luego los haremos dinámicos)
-  const prs = calculatedPRs();{
-    hipThrust: 75,
-    prensa: 120,
-    smithSquat: 60
-  };
+  const prs = calculatePRs();
 
-  // 📈 evolución simulada (luego será real desde tus entrenos)
   const evolution = [
     { week: "Semana 1", value: 60 },
     { week: "Semana 2", value: 65 },
