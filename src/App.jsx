@@ -46,10 +46,10 @@ const routines = {
 };
 
 const dayMeta = {
-  Lunes: "Lower A",
-  Martes: "Upper + Core",
-  Jueves: "Glute Focus",
-  Viernes: "Lower B"
+  Lunes: "Glúteo fuerte",
+  Martes: "Tren superior y core",
+  Jueves: "Glúteo correctivo",
+  Viernes: "Pierna completa"
 };
 
 const tabs = [
@@ -181,212 +181,6 @@ const formatDate = (date) =>
     month: "long",
     year: "numeric"
   }).format(date);
-
-const escapeHtml = (value) =>
-  String(value ?? "")
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#039;");
-
-const buildReportHtml = ({ profile, workouts }) => {
-  const prs = calculatePRs(workouts);
-  const stats = calculateStats(workouts);
-  const balance = calculateGluteBalance(workouts);
-  const generatedAt = formatDate(new Date());
-  const workoutSections = Object.entries(workouts || {})
-    .filter(([, exercises]) => Object.values(exercises || {}).some(isEntryFilled))
-    .map(([day, exercises]) => {
-      const rows = Object.entries(exercises || {})
-        .filter(([, values]) => isEntryFilled(values))
-        .map(
-          ([exercise, values]) => `
-            <tr>
-              <td>${escapeHtml(exercise)}</td>
-              <td>${escapeHtml(values.peso || "-")}</td>
-              <td>${escapeHtml(values.series || "-")}</td>
-              <td>${escapeHtml(values.reps || "-")}</td>
-              <td>${escapeHtml(values.rpe || "-")}</td>
-              <td>${escapeHtml(values.notes || "-")}</td>
-            </tr>
-          `
-        )
-        .join("");
-
-      return `
-        <section>
-          <h2>${escapeHtml(day)}</h2>
-          <table>
-            <thead>
-              <tr>
-                <th>Ejercicio</th>
-                <th>Peso</th>
-                <th>Series</th>
-                <th>Reps</th>
-                <th>RPE</th>
-                <th>Notas</th>
-              </tr>
-            </thead>
-            <tbody>${rows}</tbody>
-          </table>
-        </section>
-      `;
-    })
-    .join("");
-
-  return `
-    <!doctype html>
-    <html lang="es">
-      <head>
-        <meta charset="utf-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <title>Informe SymmetryFit</title>
-        <style>
-          * { box-sizing: border-box; }
-          body {
-            margin: 0;
-            padding: 32px;
-            color: #171717;
-            background: #f4f1ea;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-          }
-          main {
-            max-width: 860px;
-            margin: 0 auto;
-            padding: 28px;
-            border-radius: 12px;
-            background: #fffdf9;
-          }
-          header {
-            display: flex;
-            justify-content: space-between;
-            gap: 24px;
-            border-bottom: 1px solid #e4ded2;
-            padding-bottom: 20px;
-            margin-bottom: 24px;
-          }
-          h1, h2, h3, p { margin: 0; }
-          h1 { font-size: 34px; }
-          h2 { font-size: 20px; margin: 24px 0 12px; }
-          h3 { font-size: 14px; color: #77736d; text-transform: uppercase; }
-          p { color: #77736d; }
-          .grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 12px;
-            margin: 16px 0;
-          }
-          .card {
-            min-height: 92px;
-            padding: 14px;
-            border: 1px solid #e4ded2;
-            border-radius: 10px;
-            background: #f7f4ee;
-          }
-          .card strong {
-            display: block;
-            margin-top: 8px;
-            font-size: 24px;
-          }
-          table {
-            width: 100%;
-            border-collapse: collapse;
-            overflow: hidden;
-            border-radius: 10px;
-            background: #fff;
-          }
-          th, td {
-            border-bottom: 1px solid #eee8dc;
-            padding: 10px;
-            text-align: left;
-            vertical-align: top;
-            font-size: 13px;
-          }
-          th {
-            color: #77736d;
-            background: #f7f4ee;
-            font-size: 12px;
-            text-transform: uppercase;
-          }
-          .printActions {
-            display: flex;
-            justify-content: flex-end;
-            gap: 10px;
-            margin-bottom: 18px;
-          }
-          button {
-            min-height: 42px;
-            border: 0;
-            border-radius: 999px;
-            padding: 0 16px;
-            color: #fff;
-            background: #202020;
-            font-weight: 800;
-          }
-          @media print {
-            body { padding: 0; background: #fff; }
-            main { max-width: none; padding: 0; }
-            .printActions { display: none; }
-          }
-        </style>
-      </head>
-      <body>
-        <main>
-          <div class="printActions">
-            <button onclick="window.print()">Guardar como PDF</button>
-          </div>
-
-          <header>
-            <div>
-              <h1>SymmetryFit</h1>
-              <p>Informe de entrenamiento</p>
-            </div>
-            <p>${escapeHtml(generatedAt)}</p>
-          </header>
-
-          <section>
-            <h3>Perfil</h3>
-            <div class="grid">
-              <div class="card"><span>Peso</span><strong>${escapeHtml(profile.weight || "-")} kg</strong></div>
-              <div class="card"><span>Altura</span><strong>${escapeHtml(profile.height || "-")} cm</strong></div>
-              <div class="card"><span>Objetivo</span><strong>${escapeHtml(profile.goal || "-")}</strong></div>
-            </div>
-          </section>
-
-          <section>
-            <h3>Resumen</h3>
-            <div class="grid">
-              <div class="card"><span>Volumen total</span><strong>${stats.totalVolume} kg</strong></div>
-              <div class="card"><span>Ejercicios</span><strong>${stats.exercisesLogged}</strong></div>
-              <div class="card"><span>Dias activos</span><strong>${stats.activeDays}</strong></div>
-            </div>
-          </section>
-
-          <section>
-            <h3>Records</h3>
-            <div class="grid">
-              <div class="card"><span>Hip Thrust</span><strong>${prs.hipThrust} kg</strong></div>
-              <div class="card"><span>Prensa</span><strong>${prs.prensa} kg</strong></div>
-              <div class="card"><span>Smith Squat</span><strong>${prs.smithSquat} kg</strong></div>
-            </div>
-          </section>
-
-          <section>
-            <h3>Simetria gluteo</h3>
-            <div class="grid">
-              <div class="card"><span>Izquierdo</span><strong>${balance.left} kg</strong></div>
-              <div class="card"><span>Derecho</span><strong>${balance.right} kg</strong></div>
-              <div class="card"><span>Diferencia</span><strong>${balance.diff}%</strong></div>
-            </div>
-          </section>
-
-          ${workoutSections || "<section><h2>Entrenos</h2><p>No hay entrenos guardados todavia.</p></section>"}
-        </main>
-      </body>
-    </html>
-  `;
-};
 
 function MetricCard({ label, value, caption }) {
   return (
@@ -755,8 +549,118 @@ function Ajustes({ profile, setProfile, saveProfile, clearAll, exportData, expor
   );
 }
 
+function ReportScreen({ profile, workouts, onClose }) {
+  const prs = useMemo(() => calculatePRs(workouts), [workouts]);
+  const stats = useMemo(() => calculateStats(workouts), [workouts]);
+  const balance = useMemo(() => calculateGluteBalance(workouts), [workouts]);
+  const generatedAt = useMemo(() => formatDate(new Date()), []);
+  const loggedDays = Object.entries(workouts || {}).filter(([, exercises]) =>
+    Object.values(exercises || {}).some(isEntryFilled)
+  );
+
+  return (
+    <main className="reportPage">
+      <div className="reportActions">
+        <button type="button" onClick={onClose} className="ghostAction">
+          Volver
+        </button>
+        <button type="button" onClick={() => window.print()} className="primaryAction">
+          Guardar como PDF
+        </button>
+      </div>
+
+      <section className="reportHeader">
+        <div>
+          <span className="eyebrow">Informe de entrenamiento</span>
+          <h1>SymmetryFit</h1>
+        </div>
+        <p>{generatedAt}</p>
+      </section>
+
+      <section className="reportSection">
+        <h2>Perfil</h2>
+        <div className="reportGrid">
+          <MetricCard label="Peso" value={`${profile.weight || "-"} kg`} caption="actual" />
+          <MetricCard label="Altura" value={`${profile.height || "-"} cm`} caption="actual" />
+          <MetricCard label="Objetivo" value={profile.goal || "-"} caption={profile.level || "-"} />
+        </div>
+      </section>
+
+      <section className="reportSection">
+        <h2>Resumen</h2>
+        <div className="reportGrid">
+          <MetricCard label="Volumen" value={`${stats.totalVolume} kg`} caption="carga total" />
+          <MetricCard label="Ejercicios" value={stats.exercisesLogged} caption="registrados" />
+          <MetricCard label="Dias" value={stats.activeDays} caption="con datos" />
+        </div>
+      </section>
+
+      <section className="reportSection">
+        <h2>Records</h2>
+        <div className="reportGrid">
+          <MetricCard label="Hip Thrust" value={`${prs.hipThrust} kg`} caption="mejor carga" />
+          <MetricCard label="Prensa" value={`${prs.prensa} kg`} caption="mejor carga" />
+          <MetricCard label="Smith Squat" value={`${prs.smithSquat} kg`} caption="mejor carga" />
+        </div>
+      </section>
+
+      <section className="reportSection">
+        <h2>Simetria gluteo</h2>
+        <div className="reportGrid">
+          <MetricCard label="Izquierdo" value={`${balance.left} kg`} caption="mejor carga" />
+          <MetricCard label="Derecho" value={`${balance.right} kg`} caption="mejor carga" />
+          <MetricCard label="Diferencia" value={`${balance.diff}%`} caption={balance.status} />
+        </div>
+      </section>
+
+      <section className="reportSection">
+        <h2>Entrenos guardados</h2>
+
+        {loggedDays.length ? (
+          loggedDays.map(([day, exercises]) => (
+            <div key={day} className="reportTableBlock">
+              <h3>{day}</h3>
+              <div className="reportTableWrap">
+                <table className="reportTable">
+                  <thead>
+                    <tr>
+                      <th>Ejercicio</th>
+                      <th>Peso</th>
+                      <th>Series</th>
+                      <th>Reps</th>
+                      <th>RPE</th>
+                      <th>Notas</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {Object.entries(exercises || {})
+                      .filter(([, values]) => isEntryFilled(values))
+                      .map(([exercise, values]) => (
+                        <tr key={exercise}>
+                          <td>{exercise}</td>
+                          <td>{values.peso || "-"}</td>
+                          <td>{values.series || "-"}</td>
+                          <td>{values.reps || "-"}</td>
+                          <td>{values.rpe || "-"}</td>
+                          <td>{values.notes || "-"}</td>
+                        </tr>
+                      ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          ))
+        ) : (
+          <div className="emptyState">No hay entrenos guardados todavia.</div>
+        )}
+      </section>
+    </main>
+  );
+}
+
 export default function App() {
   const [tab, setTab] = useState("entrenos");
+  const [reportOpen, setReportOpen] = useState(false);
   const [workouts, setWorkouts] = useState(() =>
     readStoredJson(STORAGE_KEYS.workouts, {})
   );
@@ -810,25 +714,7 @@ export default function App() {
     URL.revokeObjectURL(url);
   };
 
-  const exportReport = () => {
-    const reportWindow = window.open("", "_blank", "noopener,noreferrer");
-    const reportHtml = buildReportHtml({ profile, workouts });
-
-    if (!reportWindow) {
-      const blob = new Blob([reportHtml], { type: "text/html" });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = "symmetryfit-informe.html";
-      link.click();
-      URL.revokeObjectURL(url);
-      return;
-    }
-
-    reportWindow.document.open();
-    reportWindow.document.write(reportHtml);
-    reportWindow.document.close();
-  };
+  const exportReport = () => setReportOpen(true);
 
   const screen = {
     entrenos: (
@@ -851,6 +737,18 @@ export default function App() {
       />
     )
   }[tab];
+
+  if (reportOpen) {
+    return (
+      <div className="appShell reportShell">
+        <ReportScreen
+          profile={profile}
+          workouts={workouts}
+          onClose={() => setReportOpen(false)}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="appShell">

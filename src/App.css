@@ -487,6 +487,116 @@ p {
   gap: 10px;
 }
 
+.reportShell {
+  padding-bottom: 32px;
+}
+
+.reportPage {
+  display: grid;
+  gap: 18px;
+}
+
+.reportActions {
+  position: sticky;
+  top: 10px;
+  z-index: 15;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 10px;
+  padding: 10px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: rgba(255, 253, 249, 0.9);
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(18px);
+}
+
+.reportHeader,
+.reportSection {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: rgba(255, 253, 249, 0.9);
+  box-shadow: var(--shadow);
+}
+
+.reportHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 18px;
+}
+
+.reportHeader h1 {
+  color: var(--ink);
+  font-size: 2.2rem;
+  line-height: 1;
+}
+
+.reportHeader p {
+  flex: 0 0 auto;
+  color: var(--muted);
+  font-weight: 800;
+}
+
+.reportSection {
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+}
+
+.reportSection h2 {
+  color: var(--ink);
+  font-size: 1.2rem;
+}
+
+.reportGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.reportTableBlock {
+  display: grid;
+  gap: 10px;
+}
+
+.reportTableBlock h3 {
+  color: var(--sage-strong);
+  font-size: 1rem;
+}
+
+.reportTableWrap {
+  overflow-x: auto;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+
+.reportTable {
+  width: 100%;
+  min-width: 640px;
+  border-collapse: collapse;
+  background: var(--surface);
+}
+
+.reportTable th,
+.reportTable td {
+  padding: 10px;
+  border-bottom: 1px solid var(--line);
+  color: var(--ink);
+  text-align: left;
+  vertical-align: top;
+  font-size: 0.82rem;
+}
+
+.reportTable th {
+  color: var(--muted);
+  background: var(--surface-soft);
+  font-size: 0.72rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
 .bottomNav {
   position: fixed;
   right: 16px;
@@ -601,6 +711,60 @@ p {
 
   .bottomNav {
     background: rgba(8, 8, 8, 0.92);
+  }
+
+  .reportActions,
+  .reportHeader,
+  .reportSection {
+    background: rgba(27, 28, 26, 0.9);
+  }
+}
+
+@media (max-width: 520px) {
+  .reportGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media print {
+  :root {
+    --bg: #fff;
+    --surface: #fff;
+    --surface-soft: #f4f1ea;
+    --ink: #171717;
+    --muted: #77736d;
+    --line: #e4ded2;
+  }
+
+  body {
+    background: #fff;
+  }
+
+  .appShell,
+  .reportShell {
+    width: 100%;
+    max-width: none;
+    min-height: auto;
+    padding: 0;
+  }
+
+  .reportActions {
+    display: none;
+  }
+
+  .reportHeader,
+  .reportSection,
+  .metricCard {
+    break-inside: avoid;
+    box-shadow: none;
+  }
+
+  .reportTableWrap {
+    overflow: visible;
+  }
+
+  .reportTable {
+    min-width: 0;
   }
 }
 
